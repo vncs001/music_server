@@ -5,6 +5,7 @@ até ficar "done"; aí busca o arquivo. Os jobs ficam só na memória:
 se o servidor reiniciar, os downloads em andamento são perdidos (é só pedir de novo).
 """
 
+import logging
 import threading
 import time
 import uuid
@@ -14,6 +15,8 @@ from pathlib import Path
 
 from app.models import JobInfo, JobStatus
 from app.services.downloader import Downloader
+
+log = logging.getLogger("uvicorn.error")
 
 
 @dataclass
@@ -79,5 +82,18 @@ class JobManager:
             job.progress = 1.0
             job.status = JobStatus.DONE
         except Exception as error:  # qualquer falha do yt-dlp vira mensagem para o app
-            job.error = str(error)[:300]
+            # aparece no log do contêiner (docker logs), com o motivo completo
+            log.error("download %s (video %s) falhou: %s", job.id, job.video_id, error)
+            job.error = self._readable(str(error))
             job.status = JobStatus.ERROR
+
+    @staticmethod
+    def _readable(message: str) -> str:
+        """
+        "ERROR: [youtube] abc123: Sign in to confirm..." -> "Sign in to confirm..."
+        Tira o prefixo técnico para o motivo caber na tela do celular.
+        """
+        message = message.removeprefix("ERROR: ")
+        if message.startswith("[") and ": " in message:
+            message = message.split(": ", 1)[1]
+        return message[:300]

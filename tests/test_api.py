@@ -29,7 +29,7 @@ class FakeDownloader:
     def download(self, job_id, video_id, on_progress):
         on_progress(JobStatus.DOWNLOADING, 0.5)
         if self.fail:
-            raise RuntimeError("Video unavailable")
+            raise RuntimeError(f"ERROR: [youtube] {video_id}: Video unavailable")
         path = self.folder / f"{job_id}.mp3"
         path.write_bytes(b"ID3fake")
         return path, "Banda - Musica.mp3"
@@ -87,7 +87,7 @@ def test_download_com_erro(tmp_path):
     client = make_client(tmp_path, fail=True)
     job = client.post("/downloads", json={"video_id": "abc"}, headers=AUTH).json()
     job = wait_job(client, job["id"])
-    assert job["status"] == "error" and "unavailable" in job["error"]
+    assert job["status"] == "error" and job["error"] == "Video unavailable"
     assert client.get(f"/downloads/{job['id']}/file", headers=AUTH).status_code == 409
 
 
@@ -117,3 +117,20 @@ def test_limpeza_apaga_arquivos_antigos(tmp_path):
 )
 def test_nome_do_arquivo(info, expected):
     assert Downloader.nice_file_name(info) == expected
+
+
+def test_cookies_em_base64(monkeypatch):
+    import base64
+
+    conteudo = b"# Netscape HTTP Cookie File\n.youtube.com\tTRUE\t/\tTRUE\t0\tSID\tabc\n"
+    monkeypatch.setenv("API_TOKEN", "x")
+    monkeypatch.setenv("YOUTUBE_COOKIES_B64", base64.b64encode(conteudo).decode())
+    settings = Settings.from_env()
+    assert settings.cookies_file.read_bytes() == conteudo
+
+
+def test_sem_cookies(monkeypatch):
+    monkeypatch.setenv("API_TOKEN", "x")
+    monkeypatch.delenv("YOUTUBE_COOKIES_B64", raising=False)
+    monkeypatch.delenv("COOKIES_FILE", raising=False)
+    assert Settings.from_env().cookies_file is None

@@ -64,10 +64,23 @@ O YouTube muda a proteção com frequência e o yt-dlp acompanha. Na VPS:
 ./scripts/update.sh    # git pull + reconstrói a imagem com o yt-dlp mais novo
 ```
 
-Se o erro for **"Sign in to confirm you're not a bot"**, o YouTube bloqueou o IP da VPS
-(acontece com IPs de datacenter). Exporte os cookies de uma conta do YouTube (pode ser uma conta
-secundária) com uma extensão "Get cookies.txt", salve em `secrets/cookies.txt` e descomente
-`COOKIES_FILE=/secrets/cookies.txt` no `.env`. Depois `docker compose up -d`.
+### "Sign in to confirm you're not a bot"
+
+O YouTube bloqueia downloads de IPs de datacenter (a busca continua funcionando). A solução é
+o servidor baixar com os cookies de uma conta do YouTube:
+
+1. Use uma **conta secundária** (o YouTube pode restringir contas usadas por robôs).
+2. No navegador, instale a extensão **"Get cookies.txt LOCALLY"**.
+3. Abra uma **janela anônima**, entre no YouTube com a conta secundária e abra um vídeo.
+4. Exporte os cookies de `youtube.com` com a extensão (gera um `cookies.txt`) e
+   **feche a janela anônima sem sair da conta** (sair invalida os cookies).
+5. Converta para base64: `base64 -w0 cookies.txt` (no WSL/Linux).
+6. No painel da VPS, crie a variável secreta `YOUTUBE_COOKIES_B64` com esse texto
+   (usada "ao rodar") e reimplante.
+
+Sem painel, dá para montar o arquivo: salve em `secrets/cookies.txt` e use
+`COOKIES_FILE=/secrets/cookies.txt`. Os cookies duram semanas/meses; quando o erro voltar,
+repita os passos.
 
 ## Desenvolvimento local
 
