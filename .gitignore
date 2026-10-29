@@ -4,3 +4,7 @@ __pycache__/
 .env
 downloads/
 secrets/
+
+# cookies do YouTube = acesso à conta: NUNCA vão para o git
+cookies*.txt
+*.b64
