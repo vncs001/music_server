@@ -4,7 +4,7 @@ Servidor de downloads do **8bit player** (`../music_app`). O app busca uma músi
 baixa o áudio do YouTube com o **yt-dlp**, converte para MP3 e o celular puxa o arquivo.
 
 ```
-celular ──HTTPS──▶ Caddy (certificado grátis) ──▶ servidor Python (FastAPI + yt-dlp + ffmpeg)
+celular ──HTTPS──▶ nginx do painel da VPS ──▶ servidor Python :8000 (FastAPI + yt-dlp + ffmpeg)
 ```
 
 > Baixar do YouTube vai contra os termos de uso dele. Uso pessoal, por sua conta.
@@ -21,7 +21,7 @@ app/
     downloader.py       Downloader: yt-dlp + ffmpeg -> "Artista - Titulo.mp3"
     jobs.py             JobManager: fila de downloads em segundo plano + limpeza
 tests/                  testes sem internet (busca e download falsos)
-Dockerfile, docker-compose.yml, Caddyfile   deploy na VPS
+Dockerfile, docker-compose.yml   deploy na VPS
 scripts/update.sh       atualiza código + yt-dlp na VPS
 ```
 
@@ -40,30 +40,21 @@ Todas as rotas, menos `/health`, exigem `Authorization: Bearer <API_TOKEN>`.
 
 Documentação interativa: `https://SEU_DOMINIO/docs`.
 
-## Deploy na VPS
+## Deploy na VPS (painel com deploy por Git)
 
-Qualquer VPS Linux com 1 GB de RAM serve. Na VPS:
+O painel da VPS faz o HTTPS com o nginx dele; o `docker-compose.yml` sobe só o servidor na
+porta 8000 (aberta apenas para a própria VPS, `127.0.0.1`).
 
-```bash
-# 1. Docker (uma vez)
-curl -fsSL https://get.docker.com | sh
+1. **Deploy a partir do Git** com este repositório. Variáveis:
+   - `API_TOKEN`: gere e **guarde uma cópia** (vai no app também). Marque como segredo, usada "ao rodar".
+   - `MAX_FILE_AGE_HOURS=24`, `MAX_PARALLEL_DOWNLOADS=2` (use 1 se a VPS tiver 1 GB de RAM).
+2. **Portas e Domínios**: aponte um domínio/subdomínio para a **porta 8000** e ative o HTTPS.
+3. Teste no navegador: `https://SEU_DOMINIO/health` deve mostrar `{"ok":true}`.
+4. No app: **CONFIG → Servidor de downloads** → `https://SEU_DOMINIO` + o token → SALVAR E TESTAR.
 
-# 2. Código
-git clone <seu-repositorio> music_server && cd music_server
-cp .env.example .env
-nano .env        # preencha API_TOKEN e DOMAIN (veja abaixo)
-
-# 3. Subir
-docker compose up -d --build
-curl https://SEU_DOMINIO/health      # deve responder {"ok":true}
-```
-
-- **API_TOKEN**: gere com `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`.
-- **DOMAIN**: sem domínio próprio, use o IP da VPS com sslip.io (IP `203.0.113.5` vira
-  `203-0-113-5.sslip.io`). O Caddy tira o certificado HTTPS sozinho; as portas 80 e 443 precisam
-  estar abertas no firewall da VPS.
-
-No app: **CONFIG → Servidor** → endereço `https://SEU_DOMINIO` e o mesmo token.
+Sem painel (VPS "crua"): instale o Docker (`curl -fsSL https://get.docker.com | sh`), crie um `.env`
+a partir do `.env.example`, rode `docker compose up -d --build` e coloque um proxy com HTTPS
+(nginx ou Caddy) apontando para `127.0.0.1:8000`.
 
 ### Quando os downloads começarem a falhar
 

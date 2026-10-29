@@ -1,5 +1,0 @@
-# DOMAIN vem do .env. Sem domínio próprio, use o IP da VPS com sslip.io:
-#   IP 203.0.113.5  ->  DOMAIN=203-0-113-5.sslip.io
-{$DOMAIN} {
-	reverse_proxy server:8000
-}

@@ -1,28 +1,23 @@
+# O HTTPS e o domínio ficam com o painel da VPS (nginx dele, aba "Portas e Domínios").
+# Aqui sobe só o servidor Python, na porta 8000.
 services:
-  # O servidor Python (não fica exposto direto na internet: só o Caddy fala com ele)
   server:
     build: .
-    env_file: .env
+    ports:
+      # 127.0.0.1 = só o nginx da própria VPS acessa; ninguém de fora fala direto com a porta 8000
+      - "127.0.0.1:8000:8000"
+    environment:
+      # valores vêm das variáveis do painel (ou de um arquivo .env nesta pasta)
+      API_TOKEN: ${API_TOKEN:?defina API_TOKEN}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      COOKIES_FILE: ${COOKIES_FILE:-}
+      MAX_FILE_AGE_HOURS: ${MAX_FILE_AGE_HOURS:-24}
+      MAX_PARALLEL_DOWNLOADS: ${MAX_PARALLEL_DOWNLOADS:-2}
     volumes:
       - downloads:/data/downloads
       # coloque aqui o cookies.txt, se precisar (veja README)
       - ./secrets:/secrets:ro
     restart: unless-stopped
 
-  # Caddy: HTTPS automático (certificado grátis) na frente do servidor
-  caddy:
-    image: caddy:2
-    env_file: .env
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-    depends_on:
-      - server
-    restart: unless-stopped
-
 volumes:
   downloads:
-  caddy_data:
