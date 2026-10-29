@@ -27,7 +27,7 @@ class Settings:
         load_dotenv()
         token = os.getenv("API_TOKEN", "").strip()
         if not token:
-            raise RuntimeError("Defina API_TOKEN no .env (veja .env.example)")
+            raise RuntimeError("API_TOKEN não chegou ao servidor: defina a variável no painel ou no .env (veja .env.example)")
 
         cookies = os.getenv("COOKIES_FILE", "").strip()
         return cls(

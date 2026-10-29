@@ -50,8 +50,9 @@ def wait_job(client: TestClient, job_id: str) -> dict:
     raise AssertionError("job não terminou")
 
 
-def test_health_sem_token(tmp_path):
-    assert make_client(tmp_path).get("/health").json() == {"ok": True}
+@pytest.mark.parametrize("path", ["/", "/health"])
+def test_health_sem_token(tmp_path, path):
+    assert make_client(tmp_path).get(path).json() == {"ok": True}
 
 
 @pytest.mark.parametrize("headers", [{}, {"Authorization": "Bearer errado"}])

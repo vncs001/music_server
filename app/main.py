@@ -1,7 +1,7 @@
 """Servidor de downloads do 8bit player.
 
 Rotas (todas, menos /health, exigem o header "Authorization: Bearer <API_TOKEN>"):
-  GET  /health                     servidor vivo? (sem token)
+  GET  / ou /health                servidor vivo? (sem token)
   GET  /check                      token certo?
   GET  /search?q=nome&limit=5      busca músicas no YouTube
   POST /downloads {"video_id"}     começa a baixar, devolve o job
@@ -50,8 +50,10 @@ def create_app(
             raise HTTPException(status_code=404, detail="download não encontrado (expirou?)")
         return job
 
+    @app.get("/")
     @app.get("/health")
     def health() -> dict:
+        """Sem token: o painel da VPS usa para saber se o servidor subiu."""
         return {"ok": True}
 
     @app.get("/check", dependencies=[Depends(check_token)])

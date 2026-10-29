@@ -31,7 +31,7 @@ Todas as rotas, menos `/health`, exigem `Authorization: Bearer <API_TOKEN>`.
 
 | Rota | O que faz |
 |---|---|
-| `GET /health` | servidor vivo? (sem token) |
+| `GET /` ou `/health` | servidor vivo? (sem token) |
 | `GET /check` | token certo? (botão TESTAR do app) |
 | `GET /search?q=nome&limit=5` | busca no YouTube |
 | `POST /downloads` `{"video_id": "..."}` | começa a baixar, devolve o job |
