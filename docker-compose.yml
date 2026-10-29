@@ -1,0 +1,28 @@
+services:
+  # O servidor Python (não fica exposto direto na internet: só o Caddy fala com ele)
+  server:
+    build: .
+    env_file: .env
+    volumes:
+      - downloads:/data/downloads
+      # coloque aqui o cookies.txt, se precisar (veja README)
+      - ./secrets:/secrets:ro
+    restart: unless-stopped
+
+  # Caddy: HTTPS automático (certificado grátis) na frente do servidor
+  caddy:
+    image: caddy:2
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  downloads:
+  caddy_data:

@@ -1,0 +1,9 @@
+# Servidor web
+fastapi==0.162.*
+uvicorn[standard]==0.54.*
+python-dotenv==1.2.*
+# Download do YouTube: SEM versão fixa de propósito.
+# O YouTube muda a proteção com frequência; reconstruir a imagem pega o yt-dlp mais novo.
+yt-dlp[default]
+# Runtime JavaScript que o yt-dlp precisa para resolver os links do YouTube
+deno==2.*
